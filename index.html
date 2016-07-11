@@ -1,0 +1,138 @@
+<html>
+  <head>
+  <style>
+    html, body, form {padding:0; margin:0; font-size:13pt; font-family: Ubuntu, Sans-serif;}
+    input, button {font-size:13pt;}
+    input[type='number'] {width:3em;}
+    label {display:inline-block; min-width:275px;}
+    #animation { 
+        background-repeat: no-repeat; 
+        border: 1px dashed #666;
+        color: #888;
+    }
+    header {background-color: #eee; padding:15px; margin:10px;}
+    img {visibility:hidden;}
+    section {padding:15px;}
+    form p {margin-bottom:30px;}
+    form .form-section {margin-top:10px;}
+    form .form-section:last-child {border-top:1px solid white; padding-top:15px; margin-top:30px;}
+  </style>
+
+  <script>
+    window.files = [];
+    window.intervalId = undefined;
+    window.interval = 150;
+
+    function ready(fn) {
+      if (document.readyState != 'loading'){
+        fn();
+      } else {
+        document.addEventListener('DOMContentLoaded', fn);
+      }
+    }
+
+    function prepareAnimation(e){
+      e.preventDefault();
+      stopAnimation();
+      var input = document.querySelector("input[type='file']");
+      window.interval = parseInt(document.querySelector("input[name='interval']").value, 10);
+      window.files = [];
+      var div = document.getElementById("animation"); 
+      div.innerText = '';
+
+      for (var i = 0; i < input.files.length; i++){
+        var reader = new FileReader();
+        reader.onload = function(e){
+          window.files.push(e.target.result);
+          if (input.files.length === 1){
+            startSpriteAnimation();
+          } else if (input.files.length === files.length){
+            startSlideAnimation();
+          }
+        };
+        reader.readAsDataURL(input.files[i]);
+      }
+
+      return false;
+    }
+
+    ready(function(){
+      document.querySelectorAll('input').forEach(function(input){
+        input.addEventListener('change', prepareAnimation);
+      });
+    });
+
+    ready(function(){
+      document.querySelector("form").addEventListener('submit', prepareAnimation);
+    });
+
+    function stopAnimation(){
+      if (intervalId !== undefined){
+        clearInterval(intervalId);
+      }
+    }
+
+    function startSlideAnimation() { 
+      var files = window.files;
+      var currentFile = 0;
+      var img = document.querySelector('img');
+      var div = document.getElementById("animation"); 
+      div.style.backgroundPosition = "0px 0px"; 
+
+      window.intervalId = setInterval(function () { 
+          img.src = files[currentFile];
+          var frameHeight = img.clientHeight;
+          div.style.backgroundImage = 'url(' + files[currentFile] + ')';
+          div.style.height = frameHeight;
+
+          currentFile++;
+          if (currentFile >= files.length) {currentFile = 0;}
+      }, window.interval); 
+    }
+
+    function startSpriteAnimation() { 
+        var frames = parseInt(document.querySelector("input[name='frames']").value, 10); 
+        var frame = 0; 
+        var div = document.getElementById("animation"); 
+        var img = document.querySelector('img');
+        img.src = window.files[0];
+        div.style.backgroundImage = 'url(' + window.files[0] + ')';
+        var frameHeight = img.clientHeight / frames;
+        div.style.height = frameHeight;
+
+        window.intervalId = setInterval(function () { 
+            var frameOffset = (++frame % frames) * -frameHeight; 
+            div.style.backgroundPosition = "0px " + frameOffset + "px"; 
+        }, window.interval); 
+    } 
+  </script>
+  </head>
+  <body>
+    <header>
+      <form>
+        <h2>Animation Preview</h2>
+        <p>
+          Select a sprite file and specify how many frames it contains OR select multiple files.<br><a href="http://jumpingfishes.com/dancingpurpleunicorns/charging.png">This is an example</a> of a sprite file with 15 frames.</p>
+
+        <div class="form-section">
+          <input type="file" multiple="">
+        </div>
+        <div class="form-section">
+          <label>Interval (milliseconds)</label>
+          <input name="interval" type="number" value="150">
+        </div>
+        <div class="form-section">
+          <label>Number of frames (only for sprites)</label>
+          <input name="frames" type="number" value="2">
+        </div>
+        <div class="form-section">
+          <button>Refresh</button>
+        </div>
+      </form>
+    </header>
+    <section class="canvas">
+      <div id="animation">Preview will be here</div>
+    </section>
+    <img src="" />
+  </body>
+</html>
